@@ -3,7 +3,6 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Define the specific admin UID
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
 type AuthContextType = {
@@ -27,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Fetch user profile from the profiles table
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -51,13 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) await fetchProfile(user.id);
   };
 
-  // Initialize auth state and listen for changes
   useEffect(() => {
     setIsLoading(true);
 
     const initializeAuth = async () => {
       const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      console.log('Initial session:', currentSession, 'Error:', error);
+      console.log('Initial session:', currentSession, 'Error:', error?.message);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
@@ -92,13 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Debug session persistence in localStorage
     const checkStorage = () => {
       const sessionData = localStorage.getItem('supabase.auth.token');
       console.log('Session in localStorage:', sessionData ? JSON.parse(sessionData) : null);
     };
     checkStorage();
-    const interval = setInterval(checkStorage, 5000); // Check every 5 seconds
+    const interval = setInterval(checkStorage, 5000);
 
     return () => {
       subscription.unsubscribe();
@@ -120,14 +116,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
 
       if (data.user?.id === ADMIN_UID) {
-        toast.success("Welcome, Admin! Redirecting to dashboard...");
+        toast.success('Welcome, Admin! Redirecting to dashboard...');
       } else {
-        toast.success("Login successful!");
+        toast.success('Login successful!');
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('Sign in error:', error.message);
       return {
         success: false,
         error: error.message || 'Login failed',
@@ -148,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Sign up successful:', data);
       return { success: true };
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Sign up error:', error.message);
       return {
         success: false,
         error: error.message || 'Signup failed',
@@ -197,8 +193,8 @@ export const useAuth = () => {
 };
 
 export const createAdminUser = async () => {
-  const adminEmail = 'admin@example.com';
-  const adminPassword = 'admin123';
+  const adminEmail = 'admin@your-real-domain.com'; // Replace with a valid, unique email
+  const adminPassword = 'admin123!@#'; // Stronger password
 
   const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
     email: adminEmail,
@@ -217,7 +213,7 @@ export const createAdminUser = async () => {
   });
 
   if (error) {
-    console.error('Error creating admin user:', error);
+    console.error('Error creating admin user:', error.message);
     return;
   }
 
@@ -228,7 +224,7 @@ export const createAdminUser = async () => {
       .eq('id', data.user.id);
 
     if (roleError) {
-      console.error('Error setting admin role:', roleError);
+      console.error('Error setting admin role:', roleError.message);
     } else {
       console.log('Admin user created and role set');
     }
