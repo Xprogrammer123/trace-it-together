@@ -53,11 +53,7 @@ const LoginPage = () => {
       
       if (success) {
         // Admin is automatically directed to the admin dashboard
-        const from = user?.id === ADMIN_UID 
-          ? "/admin" 
-          : location.state?.from?.pathname || "/";
-          
-        navigate(from);
+        navigate("/admin");
       } else {
         toast.error(error || "Invalid email or password. Please try again.");
         form.setError("password", { message: "Invalid email or password" });
