@@ -75,6 +75,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
+        // Manually store session if Supabase isn't
+        if (newSession) {
+          try {
+            localStorage.setItem('supabase.auth.token', JSON.stringify({
+              access_token: newSession.access_token,
+              refresh_token: newSession.refresh_token,
+              expires_in: newSession.expires_in,
+              expires_at: newSession.expires_at,
+              token_type: newSession.token_type,
+            }));
+            console.log('Manually stored session in localStorage');
+          } catch (e) {
+            console.error('Failed to manually store session:', e);
+          }
+        } else {
+          localStorage.removeItem('supabase.auth.token');
+        }
+
         if (newSession?.user) {
           if (newSession.user.id === ADMIN_UID) {
             setIsAdmin(true);
@@ -116,7 +134,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       setUser(data.user);
 
-      // Verify session is set in localStorage
+      // Manually store session
+      try {
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_in: data.session.expires_in,
+          expires_at: data.session.expires_at,
+          token_type: data.session.token_type,
+        }));
+        console.log('Manually stored session after signIn');
+      } catch (e) {
+        console.error('Failed to manually store session after signIn:', e);
+      }
+
       const storedSession = localStorage.getItem('supabase.auth.token');
       console.log('Session stored after signIn:', storedSession ? JSON.parse(storedSession) : null);
 
@@ -164,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       setIsAdmin(false);
+      localStorage.removeItem('supabase.auth.token');
       console.log('Signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
@@ -198,8 +230,8 @@ export const useAuth = () => {
 };
 
 export const createAdminUser = async () => {
-  const adminEmail = 'adminpage@gmail.com'; // Replace with a valid, unique email
-  const adminPassword = 'adminpage@12345';
+  const adminEmail = 'admin@your-real-domain.com';
+  const adminPassword = 'admin123!@#';
 
   const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
     email: adminEmail,
