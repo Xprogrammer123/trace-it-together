@@ -193,8 +193,8 @@ export const useAuth = () => {
 };
 
 export const createAdminUser = async () => {
-  const adminEmail = 'admin@your-real-domain.com'; // Replace with a valid, unique email
-  const adminPassword = 'admin123!@#'; // Stronger password
+  const adminEmail = 'adminpage@gmail.com'; // Replace with a valid, unique email
+  const adminPassword = 'adminpage@12345'; // Stronger password
 
   const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
     email: adminEmail,
