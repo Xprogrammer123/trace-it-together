@@ -104,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign in with:', { email, password });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -111,9 +112,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      console.log('Sign in successful:', data);
+      console.log('Sign in response:', data);
       setSession(data.session);
       setUser(data.user);
+
+      // Verify session is set in localStorage
+      const storedSession = localStorage.getItem('supabase.auth.token');
+      console.log('Session stored after signIn:', storedSession ? JSON.parse(storedSession) : null);
 
       if (data.user?.id === ADMIN_UID) {
         toast.success('Welcome, Admin! Redirecting to dashboard...');
@@ -221,7 +226,7 @@ export const createAdminUser = async () => {
     const { error: roleError } = await supabase
       .from('profiles')
       .update({ role: 'admin' })
-      .eq('id', data.id);
+      .eq('id', data.user.id);
 
     if (roleError) {
       console.error('Error setting admin role:', roleError.message);
