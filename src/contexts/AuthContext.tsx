@@ -4,6 +4,9 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Define the specific admin UID that should always be recognized as admin
+const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
@@ -41,7 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data) {
         setProfile(data);
-        setIsAdmin(data.role === 'admin');
+        // Check if user is admin either by role or by matching the specific admin UID
+        setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
       }
       return data;
     } catch (error) {
@@ -69,6 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Use setTimeout to prevent potential deadlocks with Supabase auth
         if (newSession?.user) {
           setTimeout(() => {
+            // If user is the specific admin, set isAdmin true immediately
+            if (newSession.user.id === ADMIN_UID) {
+              setIsAdmin(true);
+            }
             fetchProfile(newSession.user.id);
           }, 0);
         } else {
@@ -89,6 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
+        // If user is the specific admin, set isAdmin true immediately
+        if (currentSession.user.id === ADMIN_UID) {
+          setIsAdmin(true);
+        }
         fetchProfile(currentSession.user.id);
       }
       setIsLoading(false);
@@ -107,6 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
+      
+      // If the user logging in is our specific admin, set a success toast
+      if (data.user?.id === ADMIN_UID) {
+        toast.success("Welcome, Admin! Redirecting to dashboard...");
+      } else {
+        toast.success("Login successful!");
+      }
+      
       return { success: true };
     } catch (error: any) {
       return { 

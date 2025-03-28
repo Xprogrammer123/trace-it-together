@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Admin UID - this specific user should always be directed to the admin dashboard
+const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
+
 // Form schema validation
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -32,7 +35,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -49,9 +52,11 @@ const LoginPage = () => {
       const { success, error } = await signIn(values.email, values.password);
       
       if (success) {
-        toast.success("Login successful!");
-        // Redirect to where they came from or to admin dashboard
-        const from = location.state?.from?.pathname || "/admin";
+        // Admin is automatically directed to the admin dashboard
+        const from = user?.id === ADMIN_UID 
+          ? "/admin" 
+          : location.state?.from?.pathname || "/";
+          
         navigate(from);
       } else {
         toast.error(error || "Invalid email or password. Please try again.");
@@ -151,8 +156,9 @@ const LoginPage = () => {
             </Link>
           </div>
           <p className="text-xs text-gray-500 text-center mt-4 px-4">
-            For demonstration purposes, use: <br />
-            Email: admin@example.com | Password: admin123
+            For demonstration purposes, use either: <br />
+            Email: admin@example.com | Password: admin123 <br />
+            or use the pre-configured admin account
           </p>
         </CardFooter>
       </Card>
