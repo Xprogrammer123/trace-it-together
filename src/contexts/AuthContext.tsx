@@ -3,7 +3,6 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Define the specific admin UID that should always be recognized as admin
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
 type AuthContextType = {
@@ -27,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Fetch user profile from the profiles table
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -36,16 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
+      if (error) throw error;
 
-      if (data) {
-        setProfile(data);
-        // Check if user is admin either by role or by matching the specific admin UID
-        setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
-      }
+      setProfile(data);
+      setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -54,56 +46,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id);
-    }
+    if (user) await fetchProfile(user.id);
   };
 
-  // Initialize auth state
   useEffect(() => {
     setIsLoading(true);
 
-    // Set up auth state listener FIRST
+    const initializeAuth = async () => {
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      console.log('Initial session:', currentSession, 'Error:', error);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (currentSession?.user) {
+        if (currentSession.user.id === ADMIN_UID) {
+          setIsAdmin(true);
+        }
+        await fetchProfile(currentSession.user.id);
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
+        console.log('Auth state changed:', event, newSession);
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
-        // Use setTimeout to prevent potential deadlocks with Supabase auth
         if (newSession?.user) {
-          setTimeout(() => {
-            // If user is the specific admin, set isAdmin true immediately
-            if (newSession.user.id === ADMIN_UID) {
-              setIsAdmin(true);
-            }
-            fetchProfile(newSession.user.id);
-          }, 0);
+          if (newSession.user.id === ADMIN_UID) {
+            setIsAdmin(true);
+          }
+          await fetchProfile(newSession.user.id);
         } else {
           setProfile(null);
           setIsAdmin(false);
         }
 
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setIsAdmin(false);
-        }
+        setIsLoading(false);
       }
     );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user) {
-        // If user is the specific admin, set isAdmin true immediately
-        if (currentSession.user.id === ADMIN_UID) {
-          setIsAdmin(true);
-        }
-        fetchProfile(currentSession.user.id);
-      }
-      setIsLoading(false);
-    });
 
     return () => {
       subscription.unsubscribe();
@@ -118,8 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
-      
-      // If the user logging in is our specific admin, set a success toast
+
+      console.log('Sign in successful:', data);
       if (data.user?.id === ADMIN_UID) {
         toast.success("Welcome, Admin! Redirecting to dashboard...");
       } else {
@@ -128,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { success: true };
     } catch (error: any) {
+      console.error('Sign in error:', error);
       return { 
         success: false, 
         error: error.message || 'Login failed' 
@@ -140,9 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: metadata,
-        },
+        options: { data: metadata },
       });
 
       if (error) throw error;
@@ -190,26 +173,17 @@ export const createAdminUser = async () => {
   const adminEmail = 'admin@example.com';
   const adminPassword = 'admin123';
 
-  // Check if admin exists
   const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
     email: adminEmail,
     password: adminPassword,
   });
 
-  if (!signInError && user) {
-    // Admin already exists
-    return;
-  }
+  if (!signInError && user) return;
 
-  // Create admin user
   const { data, error } = await supabase.auth.signUp({
     email: adminEmail,
     password: adminPassword,
-    options: {
-      data: {
-        full_name: 'Admin User',
-      },
-    },
+    options: { data: { full_name: 'Admin User' } },
   });
 
   if (error) {
@@ -217,7 +191,6 @@ export const createAdminUser = async () => {
     return;
   }
 
-  // Set admin role directly in database
   if (data.user) {
     const { error: roleError } = await supabase
       .from('profiles')
