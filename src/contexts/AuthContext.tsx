@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user?.id === ADMIN_UID) {
         toast.success('Welcome, Admin! Redirecting to dashboard...');
       } else {
-        toast.success('Login successful!');
+        toast.success('Login successful! Redirecting to dashboard...');
       }
 
       return { success: true };
@@ -193,8 +193,8 @@ export const useAuth = () => {
 };
 
 export const createAdminUser = async () => {
-  const adminEmail = 'adminpage@gmail.com'; // Replace with a valid, unique email
-  const adminPassword = 'adminpage@12345'; // Stronger password
+  const adminEmail = 'admin@your-real-domain.com'; // Replace with a valid, unique email
+  const adminPassword = 'admin123!@#';
 
   const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
     email: adminEmail,
@@ -221,7 +221,7 @@ export const createAdminUser = async () => {
     const { error: roleError } = await supabase
       .from('profiles')
       .update({ role: 'admin' })
-      .eq('id', data.user.id);
+      .eq('id', data.id);
 
     if (roleError) {
       console.error('Error setting admin role:', roleError.message);
