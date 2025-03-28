@@ -1,4 +1,5 @@
 
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +16,6 @@ import AdminTrackingEdit from "./pages/admin/TrackingEdit";
 import AdminLayout from "./pages/admin/AdminLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider, createAdminUser } from "./contexts/AuthContext";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +41,7 @@ const App = () => {
               
               {/* Admin Routes (Protected) */}
               <Route path="/admin" element={
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <AdminLayout />
                 </ProtectedRoute>
               }>

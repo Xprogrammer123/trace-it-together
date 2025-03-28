@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Package, Search, Edit, Trash2, Loader2, PlusCircle } from "lucide-react";
@@ -55,7 +54,7 @@ const fetchTrackingData = async (): Promise<TrackingInfo[]> => {
 };
 
 // Delete tracking record in Supabase
-const deleteTracking = async (id: number | string): Promise<void> => {
+const deleteTracking = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('tracking')
     .delete()
