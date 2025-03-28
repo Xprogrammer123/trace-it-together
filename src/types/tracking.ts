@@ -1,6 +1,15 @@
 
+export interface TrackingHistory {
+  id: string;
+  tracking_id: string;
+  status: string;
+  location: string;
+  comment?: string;
+  created_at: string;
+}
+
 export interface TrackingInfo {
-  id: number;
+  id: string;
   tracking_code: string;
   status: string;
   last_updated: string;
@@ -12,6 +21,7 @@ export interface TrackingInfo {
   receiver_name: string;
   receiver_address: string;
   created_at: string;
+  history?: TrackingHistory[];
 }
 
 export interface TrackingFormData {

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData } from "@/types/tracking";
+import { supabase } from "@/integrations/supabase/client";
 
 // Form schema validation
 const trackingSchema = z.object({
@@ -41,19 +43,24 @@ const trackingSchema = z.object({
   receiver_address: z.string().min(1, "Receiver address is required"),
 });
 
-// In a real app, this would call Supabase
+// Add tracking record to Supabase
 const addTrackingRecord = async (data: TrackingFormData) => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const { data: result, error } = await supabase
+    .from('tracking')
+    .insert([data])
+    .select();
+
+  if (error) {
+    throw error;
+  }
   
-  // In a real app, this would make a POST request to Supabase
-  console.log("Adding new tracking record:", data);
-  return { success: true, id: Math.floor(Math.random() * 1000) };
+  return result[0];
 };
 
 const AdminTrackingAdd = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm<TrackingFormData>({
     resolver: zodResolver(trackingSchema),
@@ -74,10 +81,11 @@ const AdminTrackingAdd = () => {
     setIsSubmitting(true);
     try {
       await addTrackingRecord(values);
+      queryClient.invalidateQueries({ queryKey: ['tracking'] });
       toast.success("Tracking record created successfully");
       navigate("/admin"); // Return to dashboard after successful creation
-    } catch (error) {
-      toast.error("Failed to create tracking record");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create tracking record");
     } finally {
       setIsSubmitting(false);
     }

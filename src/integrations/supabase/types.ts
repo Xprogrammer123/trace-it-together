@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      tracking: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          created_by: string | null
+          current_location: string
+          destination: string
+          id: string
+          last_updated: string | null
+          receiver_address: string
+          receiver_name: string
+          shipper_address: string
+          shipper_name: string
+          status: string
+          tracking_code: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_location: string
+          destination: string
+          id?: string
+          last_updated?: string | null
+          receiver_address: string
+          receiver_name: string
+          shipper_address: string
+          shipper_name: string
+          status: string
+          tracking_code: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_location?: string
+          destination?: string
+          id?: string
+          last_updated?: string | null
+          receiver_address?: string
+          receiver_name?: string
+          shipper_address?: string
+          shipper_name?: string
+          status?: string
+          tracking_code?: string
+        }
+        Relationships: []
+      }
+      tracking_history: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          location: string
+          status: string
+          tracking_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          location: string
+          status: string
+          tracking_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string
+          status?: string
+          tracking_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_history_tracking_id_fkey"
+            columns: ["tracking_id"]
+            isOneToOne: false
+            referencedRelation: "tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

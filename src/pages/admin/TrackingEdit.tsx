@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData, TrackingInfo } from "@/types/tracking";
+import { supabase } from "@/integrations/supabase/client";
 
 // Form schema validation (same as in TrackingAdd.tsx)
 const trackingSchema = z.object({
@@ -41,43 +43,45 @@ const trackingSchema = z.object({
   receiver_address: z.string().min(1, "Receiver address is required"),
 });
 
-// In a real app, this would call Supabase
+// Fetch tracking record from Supabase
 const fetchTrackingRecord = async (trackingCode: string): Promise<TrackingInfo> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const { data, error } = await supabase
+    .from('tracking')
+    .select()
+    .eq('tracking_code', trackingCode)
+    .single();
+
+  if (error) {
+    throw error;
+  }
   
-  // Mock data - in a real app, this would fetch from Supabase
-  return {
-    id: 1,
-    tracking_code: trackingCode,
-    status: "In Transit",
-    last_updated: new Date().toISOString(),
-    current_location: "Chicago, IL",
-    destination: "New York, NY",
-    comment: "Package is on schedule",
-    shipper_name: "Electronics Warehouse",
-    shipper_address: "123 Shipper St, Chicago, IL",
-    receiver_name: "John Smith",
-    receiver_address: "456 Receiver Ave, New York, NY",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-  };
+  return data as TrackingInfo;
 };
 
-// In a real app, this would call Supabase
-const updateTrackingRecord = async (data: TrackingFormData): Promise<void> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // In a real app, this would make a PUT request to Supabase
-  console.log("Updating tracking record:", data);
-  return;
+// Update tracking record in Supabase
+const updateTrackingRecord = async (trackingCode: string, data: TrackingFormData): Promise<void> => {
+  const { error } = await supabase
+    .from('tracking')
+    .update(data)
+    .eq('tracking_code', trackingCode);
+
+  if (error) {
+    throw error;
+  }
 };
 
 const AdminTrackingEdit = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { trackingId } = useParams<{ trackingId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: trackingData, isLoading, error } = useQuery({
+    queryKey: ['trackingEdit', trackingId],
+    queryFn: () => fetchTrackingRecord(trackingId!),
+    enabled: !!trackingId,
+    retry: false,
+  });
 
   const form = useForm<TrackingFormData>({
     resolver: zodResolver(trackingSchema),
@@ -95,47 +99,40 @@ const AdminTrackingEdit = () => {
   });
 
   useEffect(() => {
-    const loadTrackingData = async () => {
-      if (!trackingId) {
-        toast.error("No tracking ID provided");
-        navigate("/admin");
-        return;
-      }
+    if (trackingData) {
+      form.reset({
+        tracking_code: trackingData.tracking_code,
+        status: trackingData.status,
+        current_location: trackingData.current_location,
+        destination: trackingData.destination,
+        comment: trackingData.comment,
+        shipper_name: trackingData.shipper_name,
+        shipper_address: trackingData.shipper_address,
+        receiver_name: trackingData.receiver_name,
+        receiver_address: trackingData.receiver_address,
+      });
+    }
+  }, [trackingData, form]);
 
-      try {
-        const trackingData = await fetchTrackingRecord(trackingId);
-        
-        // Reset form with fetched data
-        form.reset({
-          tracking_code: trackingData.tracking_code,
-          status: trackingData.status,
-          current_location: trackingData.current_location,
-          destination: trackingData.destination,
-          comment: trackingData.comment,
-          shipper_name: trackingData.shipper_name,
-          shipper_address: trackingData.shipper_address,
-          receiver_name: trackingData.receiver_name,
-          receiver_address: trackingData.receiver_address,
-        });
-      } catch (error) {
-        toast.error("Failed to load tracking data");
-        navigate("/admin");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTrackingData();
-  }, [trackingId, navigate, form]);
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load tracking data");
+      navigate("/admin");
+    }
+  }, [error, navigate]);
 
   const onSubmit = async (values: TrackingFormData) => {
+    if (!trackingId) return;
+    
     setIsSubmitting(true);
     try {
-      await updateTrackingRecord(values);
+      await updateTrackingRecord(trackingId, values);
+      queryClient.invalidateQueries({ queryKey: ['tracking'] });
+      queryClient.invalidateQueries({ queryKey: ['trackingEdit', trackingId] });
       toast.success("Tracking record updated successfully");
       navigate("/admin");
-    } catch (error) {
-      toast.error("Failed to update tracking record");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update tracking record");
     } finally {
       setIsSubmitting(false);
     }
@@ -196,6 +193,7 @@ const AdminTrackingEdit = () => {
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -258,6 +256,7 @@ const AdminTrackingEdit = () => {
                       <Textarea 
                         placeholder="Additional information about the package..."
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />

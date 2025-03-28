@@ -13,25 +13,25 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, this would call Supabase auth.signOut()
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user");
-    toast.success("Logged out successfully");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Error logging out");
+    }
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
-  // Get user info from localStorage (in a real app, this would come from Supabase)
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : { name: "Admin User" };
-
   const navItems = [
     {
       title: "Dashboard",
@@ -115,11 +115,11 @@ const AdminLayout = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-medium">
-                  {user.name.charAt(0)}
+                  {profile?.full_name ? profile.full_name.charAt(0) : user?.email?.charAt(0) || 'A'}
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.email || "admin@example.com"}</p>
+                  <p className="font-medium text-sm">{profile?.full_name || 'Admin User'}</p>
+                  <p className="text-xs text-gray-500">{user?.email || "admin@example.com"}</p>
                 </div>
               </div>
             </div>

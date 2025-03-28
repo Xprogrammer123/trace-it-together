@@ -24,76 +24,55 @@ import {
 import { toast } from "sonner";
 import { TrackingInfo } from "@/types/tracking";
 import { formatDate } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// In a real app, this would call Supabase
+// Fetch tracking data from Supabase
 const fetchTrackingData = async (): Promise<TrackingInfo[]> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock data
-  return [
-    {
-      id: 1,
-      tracking_code: "TRK-123456",
-      status: "Delivered",
-      last_updated: new Date().toISOString(),
-      current_location: "Los Angeles, CA",
-      destination: "San Francisco, CA",
-      comment: "Left at front door",
-      shipper_name: "Electronics Warehouse",
-      shipper_address: "123 Shipper St, NY",
-      receiver_name: "John Smith",
-      receiver_address: "456 Receiver Ave, SF",
-      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 2,
-      tracking_code: "TRK-789012",
-      status: "In Transit",
-      last_updated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      current_location: "Chicago, IL",
-      destination: "Miami, FL",
-      comment: "Package delayed due to weather",
-      shipper_name: "Fashion Outlet",
-      shipper_address: "789 Shipper Rd, Chicago",
-      receiver_name: "Alice Johnson",
-      receiver_address: "101 Receiver Blvd, Miami",
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: 3,
-      tracking_code: "TRK-345678",
-      status: "Processing",
-      last_updated: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      current_location: "Dallas, TX",
-      destination: "Boston, MA",
-      comment: "Awaiting pickup by carrier",
-      shipper_name: "Books Direct",
-      shipper_address: "222 Publisher Ln, Dallas",
-      receiver_name: "Robert Williams",
-      receiver_address: "333 Reader St, Boston",
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
+  const { data, error } = await supabase
+    .from('tracking')
+    .select(`
+      id,
+      tracking_code,
+      status,
+      last_updated,
+      current_location,
+      destination,
+      comment,
+      shipper_name,
+      shipper_address,
+      receiver_name,
+      receiver_address,
+      created_at
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as TrackingInfo[];
 };
 
-// In a real app, this would call Supabase
-const deleteTracking = async (id: number): Promise<void> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // In a real app, this would make a DELETE request to Supabase
-  console.log(`Deleting tracking with ID: ${id}`);
-  return;
+// Delete tracking record in Supabase
+const deleteTracking = async (id: number | string): Promise<void> => {
+  const { error } = await supabase
+    .from('tracking')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw error;
+  }
 };
 
 const AdminDashboard = () => {
-  const [trackingData, setTrackingData] = useState<TrackingInfo[]>([]);
+  const queryClient = useQueryClient();
   const [filteredData, setFilteredData] = useState<TrackingInfo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean;
-    id: number | null;
+    id: string | null;
     trackingCode: string;
   }>({
     open: false,
@@ -102,23 +81,14 @@ const AdminDashboard = () => {
   });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchTrackingData();
-        setTrackingData(data);
-        setFilteredData(data);
-      } catch (error) {
-        toast.error("Failed to load tracking data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+  const { data: trackingData, isLoading, error } = useQuery({
+    queryKey: ['tracking'],
+    queryFn: fetchTrackingData,
+  });
 
   useEffect(() => {
+    if (!trackingData) return;
+    
     if (!searchTerm) {
       setFilteredData(trackingData);
       return;
@@ -143,18 +113,11 @@ const AdminDashboard = () => {
     setIsDeleting(true);
     try {
       await deleteTracking(deleteConfirm.id);
-      
-      // Update local state
-      const newData = trackingData.filter(item => item.id !== deleteConfirm.id);
-      setTrackingData(newData);
-      setFilteredData(
-        filteredData.filter(item => item.id !== deleteConfirm.id)
-      );
-      
+      queryClient.invalidateQueries({ queryKey: ['tracking'] });
       toast.success("Tracking entry deleted successfully");
       setDeleteConfirm({ open: false, id: null, trackingCode: "" });
-    } catch (error) {
-      toast.error("Failed to delete tracking entry");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete tracking entry");
     } finally {
       setIsDeleting(false);
     }
@@ -163,6 +126,15 @@ const AdminDashboard = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <h3 className="text-lg font-medium text-red-500">Error loading tracking data</h3>
+        <p className="text-gray-500 mt-2">Please try refreshing the page</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -195,7 +167,7 @@ const AdminDashboard = () => {
             <div className="flex justify-center items-center py-8">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
-          ) : filteredData.length > 0 ? (
+          ) : filteredData?.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -248,7 +220,7 @@ const AdminDashboard = () => {
                             onClick={() => 
                               setDeleteConfirm({
                                 open: true,
-                                id: item.id,
+                                id: item.id.toString(),
                                 trackingCode: item.tracking_code
                               })
                             }

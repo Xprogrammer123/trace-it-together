@@ -12,49 +12,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrackingForm } from "@/components/TrackingForm";
 import { formatDate } from "@/lib/utils";
 import { TrackingInfo } from "@/types/tracking";
+import { supabase } from "@/integrations/supabase/client";
 
-// This would typically be a real API call to your backend
+// Fetch tracking info from Supabase
 const fetchTrackingInfo = async (trackingId: string): Promise<TrackingInfo> => {
-  // Simulating API call with a delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-  // Mock data - In a real app, this would fetch from your Supabase API
-  const mockData: Record<string, TrackingInfo> = {
-    "ABC123": {
-      id: 1,
-      tracking_code: "ABC123",
-      status: "Shipped",
-      last_updated: new Date("2024-09-20").toISOString(),
-      current_location: "Transit Hub, New York",
-      destination: "Lagos",
-      comment: "Out for delivery",
-      shipper_name: "John Doe",
-      shipper_address: "123 Street NY",
-      receiver_name: "Jane Doe",
-      receiver_address: "456 Street LA",
-      created_at: new Date("2024-09-18").toISOString()
-    },
-    "XYZ456": {
-      id: 2,
-      tracking_code: "XYZ456",
-      status: "Pending",
-      last_updated: new Date("2024-09-18").toISOString(),
-      current_location: "Warehouse, Texas",
-      destination: "Abuja",
-      comment: "Waiting for pickup",
-      shipper_name: "Alice Brown",
-      shipper_address: "789 Road TX",
-      receiver_name: "Bob White",
-      receiver_address: "101 Ave FL",
-      created_at: new Date("2024-09-17").toISOString()
-    }
-  };
-  
-  if (mockData[trackingId]) {
-    return mockData[trackingId];
+  // Fetch tracking record
+  const { data: trackingData, error: trackingError } = await supabase
+    .from('tracking')
+    .select('*')
+    .eq('tracking_code', trackingId)
+    .single();
+
+  if (trackingError) {
+    throw new Error("Tracking code not found");
   }
-  
-  throw new Error("Tracking code not found");
+
+  // Fetch tracking history
+  const { data: historyData, error: historyError } = await supabase
+    .from('tracking_history')
+    .select('*')
+    .eq('tracking_id', trackingData.id)
+    .order('created_at', { ascending: false });
+
+  if (historyError) {
+    console.error("History fetch error:", historyError);
+    // Continue with just tracking data
+  }
+
+  return {
+    ...trackingData,
+    history: historyData || []
+  } as TrackingInfo;
 };
 
 const TrackingPage: React.FC = () => {
@@ -91,10 +79,15 @@ const TrackingPage: React.FC = () => {
     switch (status) {
       case "Delivered":
         return "bg-green-500";
-      case "Shipped":
+      case "In Transit":
+      case "Processing":
         return "bg-blue-500";
       case "Pending":
         return "bg-amber-500";
+      case "Failed Delivery":
+        return "bg-red-500";
+      case "Out for Delivery":
+        return "bg-purple-500";
       default:
         return "bg-gray-500";
     }
@@ -261,24 +254,31 @@ const TrackingPage: React.FC = () => {
               </Card>
             </div>
             
-            {/* Tracking Timeline - This would be more elaborate in a real app */}
+            {/* Tracking Timeline */}
             <Card className="mt-8">
               <CardHeader>
                 <CardTitle>Tracking History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="relative border-l-2 border-gray-200 pl-6 py-2">
-                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-primary"></div>
-                  <p className="font-medium">{data.status}</p>
-                  <p className="text-sm text-gray-500">{formatDate(data.last_updated)}</p>
-                  <p className="text-gray-600">{data.comment}</p>
-                </div>
-                <div className="relative border-l-2 border-gray-200 pl-6 py-2">
-                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-gray-200"></div>
-                  <p className="font-medium">Package Received</p>
-                  <p className="text-sm text-gray-500">{formatDate(data.created_at)}</p>
-                  <p className="text-gray-600">Package received for shipping</p>
-                </div>
+                {data.history && data.history.length > 0 ? (
+                  <div className="relative space-y-2">
+                    {data.history.map((historyItem, index) => (
+                      <div key={historyItem.id} className="relative border-l-2 border-gray-200 pl-6 py-2">
+                        <div className={`absolute -left-2 top-0 w-4 h-4 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+                        <p className="font-medium">{historyItem.status}</p>
+                        <p className="text-sm text-gray-500">{formatDate(historyItem.created_at)}</p>
+                        <p className="text-gray-600">{historyItem.comment || historyItem.location}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="relative border-l-2 border-gray-200 pl-6 py-2">
+                    <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-primary"></div>
+                    <p className="font-medium">{data.status}</p>
+                    <p className="text-sm text-gray-500">{formatDate(data.last_updated)}</p>
+                    <p className="text-gray-600">{data.comment || `Current location: ${data.current_location}`}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>

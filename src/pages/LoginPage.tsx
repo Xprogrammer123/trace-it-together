@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,23 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-// In a real app, this would connect to Supabase
-const loginUser = async (email: string, password: string) => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Mock validation - In a real app, this would be authenticated by Supabase
-  if (email === "admin@example.com" && password === "password") {
-    // Mock JWT token - In a real app, Supabase would return a real token
-    const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFkbWluIFVzZXIiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.KZ-bkiT3J29T3XfYF9NxSxXXTeYTC_NctLzQC-fiAQI";
-    localStorage.setItem("auth_token", mockToken);
-    localStorage.setItem("user", JSON.stringify({ name: "Admin User", email, role: "admin" }));
-    return { token: mockToken };
-  }
-  
-  throw new Error("Invalid email or password");
-};
+import { useAuth } from "@/contexts/AuthContext";
 
 // Form schema validation
 const loginSchema = z.object({
@@ -47,6 +31,8 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -60,12 +46,19 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      await loginUser(values.email, values.password);
-      toast.success("Login successful!");
-      navigate("/admin");
+      const { success, error } = await signIn(values.email, values.password);
+      
+      if (success) {
+        toast.success("Login successful!");
+        // Redirect to where they came from or to admin dashboard
+        const from = location.state?.from?.pathname || "/admin";
+        navigate(from);
+      } else {
+        toast.error(error || "Invalid email or password. Please try again.");
+        form.setError("password", { message: "Invalid email or password" });
+      }
     } catch (error) {
-      toast.error("Invalid email or password. Please try again.");
-      form.setError("password", { message: "Invalid email or password" });
+      toast.error("An error occurred during login. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +152,7 @@ const LoginPage = () => {
           </div>
           <p className="text-xs text-gray-500 text-center mt-4 px-4">
             For demonstration purposes, use: <br />
-            Email: admin@example.com | Password: password
+            Email: admin@example.com | Password: admin123
           </p>
         </CardFooter>
       </Card>
