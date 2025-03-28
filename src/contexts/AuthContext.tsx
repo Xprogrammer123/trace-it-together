@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Define the specific admin UID
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
 type AuthContextType = {
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Fetch user profile from the profiles table
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -49,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user) await fetchProfile(user.id);
   };
 
+  // Initialize auth state and listen for changes
   useEffect(() => {
     setIsLoading(true);
 
@@ -89,8 +92,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // Debug session persistence in localStorage
+    const checkStorage = () => {
+      const sessionData = localStorage.getItem('supabase.auth.token');
+      console.log('Session in localStorage:', sessionData ? JSON.parse(sessionData) : null);
+    };
+    checkStorage();
+    const interval = setInterval(checkStorage, 5000); // Check every 5 seconds
+
     return () => {
       subscription.unsubscribe();
+      clearInterval(interval);
     };
   }, []);
 
@@ -104,18 +116,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       console.log('Sign in successful:', data);
+      setSession(data.session);
+      setUser(data.user);
+
       if (data.user?.id === ADMIN_UID) {
         toast.success("Welcome, Admin! Redirecting to dashboard...");
       } else {
         toast.success("Login successful!");
       }
-      
+
       return { success: true };
     } catch (error: any) {
       console.error('Sign in error:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Login failed' 
+      return {
+        success: false,
+        error: error.message || 'Login failed',
       };
     }
   };
@@ -129,17 +144,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
+
+      console.log('Sign up successful:', data);
       return { success: true };
     } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || 'Signup failed' 
+      console.error('Sign up error:', error);
+      return {
+        success: false,
+        error: error.message || 'Signup failed',
       };
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setIsAdmin(false);
+      console.log('Signed out successfully');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
@@ -153,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn,
         signUp,
         signOut,
-        refreshProfile
+        refreshProfile,
       }}
     >
       {children}
@@ -178,7 +205,10 @@ export const createAdminUser = async () => {
     password: adminPassword,
   });
 
-  if (!signInError && user) return;
+  if (!signInError && user) {
+    console.log('Admin user already exists');
+    return;
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email: adminEmail,
@@ -199,6 +229,8 @@ export const createAdminUser = async () => {
 
     if (roleError) {
       console.error('Error setting admin role:', roleError);
+    } else {
+      console.log('Admin user created and role set');
     }
   }
 };
