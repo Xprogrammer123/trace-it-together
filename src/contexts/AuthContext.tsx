@@ -75,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
-        // Manually store session if Supabase isn't
         if (newSession) {
           try {
             localStorage.setItem('supabase.auth.token', JSON.stringify({
@@ -134,7 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       setUser(data.user);
 
-      // Manually store session
       try {
         localStorage.setItem('supabase.auth.token', JSON.stringify({
           access_token: data.session.access_token,

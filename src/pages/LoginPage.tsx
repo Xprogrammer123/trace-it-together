@@ -52,7 +52,7 @@ const LoginPage = () => {
       const { success, error } = await signIn(values.email, values.password);
       
       if (success) {
-        // Admin is automatically directed to the admin dashboard
+        // Immediately navigate to admin dashboard on successful login
         navigate("/admin");
       } else {
         toast.error(error || "Invalid email or password. Please try again.");
