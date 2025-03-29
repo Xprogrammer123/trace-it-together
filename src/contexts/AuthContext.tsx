@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,16 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    const checkStorage = () => {
-      const sessionData = localStorage.getItem('supabase.auth.token');
-      console.log('Session in localStorage:', sessionData ? JSON.parse(sessionData) : null);
-    };
-    checkStorage();
-    const interval = setInterval(checkStorage, 5000);
-
     return () => {
       subscription.unsubscribe();
-      clearInterval(interval);
     };
   }, []);
 
@@ -147,11 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Failed to manually store session after signIn:', e);
       }
 
-      const storedSession = localStorage.getItem('supabase.auth.token');
-      console.log('Session stored after signIn:', storedSession ? JSON.parse(storedSession) : null);
-
       if (data.user?.id === ADMIN_UID) {
         toast.success('Welcome, Admin! Redirecting to dashboard...');
+        setIsAdmin(true);
       } else {
         toast.success('Login successful! Redirecting to dashboard...');
       }

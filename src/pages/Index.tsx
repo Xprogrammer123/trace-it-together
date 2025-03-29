@@ -9,6 +9,10 @@ import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { FooterSection } from "@/components/sections/FooterSection";
+import { PartnersSection } from "@/components/sections/PartnersSection";
+import { CaseStudiesSection } from "@/components/sections/CaseStudiesSection";
+import { TechnologiesSection } from "@/components/sections/TechnologiesSection";
+import { AchievementsSection } from "@/components/sections/AchievementsSection";
 
 const Index = () => {
   return (
@@ -18,8 +22,12 @@ const Index = () => {
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <TechnologiesSection />
         <WhyChooseUsSection />
+        <AchievementsSection />
         <StatsSection />
+        <CaseStudiesSection />
+        <PartnersSection />
         <TestimonialsSection />
         <FAQSection />
         <CTASection />

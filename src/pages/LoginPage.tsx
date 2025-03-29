@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -31,7 +32,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, isLoading: authLoading } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -50,7 +51,7 @@ const LoginPage = () => {
       console.log('SignIn result:', { success, error });
 
       if (success) {
-        console.log('Login successful, redirecting to /admin');
+        toast.success('Login successful! Redirecting to admin dashboard...');
         navigate('/admin');
       } else {
         console.error('Login failed with error:', error);
@@ -65,9 +66,13 @@ const LoginPage = () => {
     }
   };
 
-  console.log('LoginPage - User:', user, 'isAdmin:', isAdmin, 'authLoading:', authLoading);
-
   if (authLoading) return <div>Loading...</div>;
+
+  // If user is already logged in and is admin, redirect to admin dashboard
+  if (user && user.id === ADMIN_UID) {
+    navigate('/admin');
+    return null;
+  }
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
@@ -150,15 +155,9 @@ const LoginPage = () => {
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-gray-500">
-            <Link to="/forgot-password" className="hover:text-primary underline">
-              Forgot your password?
-            </Link>
-          </div>
           <p className="text-xs text-gray-500 text-center mt-4 px-4">
-            For demonstration purposes, use either: <br />
-            Email: admin@example.com | Password: admin123 <br />
-            or use the pre-configured admin account
+            For demonstration purposes, use: <br />
+            Email: admin@example.com | Password: admin123
           </p>
         </CardFooter>
       </Card>

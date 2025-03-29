@@ -1,11 +1,10 @@
 
-import { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
   Package,
-  PlusCircle,
   LogOut,
   Menu,
   X,
@@ -14,11 +13,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import AdminDashboard from "./Dashboard";
+
+const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
+
+  useEffect(() => {
+    // If user is not admin, redirect to login
+    if (user && user.id !== ADMIN_UID && !isAdmin) {
+      toast.error("You don't have permission to access the admin area");
+      navigate('/login');
+    } else if (!user) {
+      toast.error("Please login to access the admin dashboard");
+      navigate('/login');
+    }
+  }, [user, isAdmin, navigate]);
 
   const handleLogout = async () => {
     try {
@@ -37,11 +50,6 @@ const AdminLayout = () => {
       title: "Dashboard",
       icon: <LayoutDashboard size={18} />,
       path: "/admin"
-    },
-    {
-      title: "Add Tracking",
-      icon: <PlusCircle size={18} />,
-      path: "/admin/add"
     }
   ];
 
@@ -82,22 +90,9 @@ const AdminLayout = () => {
           <ScrollArea className="flex-1">
             <nav className="p-4 space-y-1">
               {navItems.map((item, index) => (
-                <NavLink
+                <div
                   key={index}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
-                      isActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`
-                  }
-                  onClick={() => {
-                    if (window.innerWidth < 1024) {
-                      setSidebarOpen(false);
-                    }
-                  }}
-                  end
+                  className="flex items-center gap-3 px-4 py-3 rounded-md transition-colors bg-primary/10 text-primary font-medium"
                 >
                   {item.icon}
                   <span>{item.title}</span>
@@ -105,7 +100,7 @@ const AdminLayout = () => {
                     size={16}
                     className="ml-auto text-gray-400"
                   />
-                </NavLink>
+                </div>
               ))}
             </nav>
           </ScrollArea>
@@ -152,7 +147,10 @@ const AdminLayout = () => {
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
-          <Outlet />
+          <Routes>
+            <Route index element={<AdminDashboard />} />
+            <Route path="*" element={<AdminDashboard />} />
+          </Routes>
         </main>
       </div>
     </div>
