@@ -46,7 +46,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (user) {
       console.log('User detected:', user, 'isAdmin:', isAdmin);
-      const redirectPath = isAdmin ? '/dashboard' : '/dashboard';
+      const redirectPath = isAdmin ? '/admin' : '/dashboard';
       console.log(`Redirecting to ${redirectPath}`);
       navigate(redirectPath);
     }
