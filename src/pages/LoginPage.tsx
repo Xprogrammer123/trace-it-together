@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,8 +31,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, user, isAdmin } = useAuth();
+  const { signIn, user, isAdmin, isLoading: authLoading } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -41,16 +40,6 @@ const LoginPage = () => {
       password: "",
     },
   });
-
-  // Redirect when user is logged in
-  useEffect(() => {
-    if (user) {
-      console.log('User detected:', user, 'isAdmin:', isAdmin);
-      const redirectPath = isAdmin ? '/admin' : '/dashboard';
-      console.log(`Redirecting to ${redirectPath}`);
-      navigate(redirectPath);
-    }
-  }, [user, isAdmin, navigate]);
 
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
@@ -61,9 +50,8 @@ const LoginPage = () => {
       console.log('SignIn result:', { success, error });
 
       if (success) {
-        console.log('Login successful, initiating redirect');
-        const redirectPath = user?.id === ADMIN_UID || isAdmin ? '/admin/dashboard' : '/dashboard';
-        navigate(redirectPath);
+        console.log('Login successful, redirecting to /admin');
+        navigate('/admin');
       } else {
         console.error('Login failed with error:', error);
         toast.error(error || "Invalid email or password. Please try again.");
@@ -77,9 +65,11 @@ const LoginPage = () => {
     }
   };
 
-  const toggleShowPassword = () => setShowPassword(!showPassword);
+  console.log('LoginPage - User:', user, 'isAdmin:', isAdmin, 'authLoading:', authLoading);
 
-  console.log('LoginPage - User:', user, 'isLoading:', isLoading);
+  if (authLoading) return <div>Loading...</div>;
+
+  const toggleShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
