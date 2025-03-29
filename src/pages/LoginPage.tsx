@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -19,10 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Admin UID - this specific user should always be directed to the admin dashboard
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
-// Form schema validation
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -35,8 +32,8 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, user } = useAuth();
-  
+  const { signIn, user, isAdmin } = useAuth();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -45,20 +42,35 @@ const LoginPage = () => {
     },
   });
 
+  // Redirect when user is logged in
+  useEffect(() => {
+    if (user) {
+      console.log('User detected:', user, 'isAdmin:', isAdmin);
+      const redirectPath = isAdmin ? '/admin/dashboard' : '/dashboard';
+      console.log(`Redirecting to ${redirectPath}`);
+      navigate(redirectPath);
+    }
+  }, [user, isAdmin, navigate]);
+
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
-    
+    console.log('Starting login process with:', values);
+
     try {
       const { success, error } = await signIn(values.email, values.password);
-      
+      console.log('SignIn result:', { success, error });
+
       if (success) {
-        // Immediately navigate to admin dashboard on successful login
-        navigate("/admin");
+        console.log('Login successful, initiating redirect');
+        const redirectPath = user?.id === ADMIN_UID || isAdmin ? '/admin/dashboard' : '/dashboard';
+        navigate(redirectPath);
       } else {
+        console.error('Login failed with error:', error);
         toast.error(error || "Invalid email or password. Please try again.");
         form.setError("password", { message: "Invalid email or password" });
       }
     } catch (error) {
+      console.error('Unexpected error during login:', error);
       toast.error("An error occurred during login. Please try again.");
     } finally {
       setIsLoading(false);
@@ -66,6 +78,8 @@ const LoginPage = () => {
   };
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
+
+  console.log('LoginPage - User:', user, 'isLoading:', isLoading);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
