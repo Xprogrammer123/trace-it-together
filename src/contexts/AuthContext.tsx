@@ -12,7 +12,6 @@ type AuthContextType = {
   isLoading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -38,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setProfile(data);
       setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
+      console.log('Profile fetched:', data, 'isAdmin:', data.role === 'admin' || userId === ADMIN_UID);
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -50,19 +50,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    setIsLoading(true);
-
     const initializeAuth = async () => {
+      setIsLoading(true);
       const { data: { session: currentSession }, error } = await supabase.auth.getSession();
       console.log('Initial session:', currentSession, 'Error:', error?.message);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
+      if (currentSession) {
+        setSession(currentSession);
+        setUser(currentSession.user);
         if (currentSession.user.id === ADMIN_UID) {
           setIsAdmin(true);
         }
         await fetchProfile(currentSession.user.id);
+      } else {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setIsAdmin(false);
       }
       setIsLoading(false);
     };
@@ -88,20 +92,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } catch (e) {
             console.error('Failed to manually store session:', e);
           }
+          if (newSession.user) {
+            if (newSession.user.id === ADMIN_UID) {
+              setIsAdmin(true);
+            }
+            await fetchProfile(newSession.user.id);
+          }
         } else {
           localStorage.removeItem('supabase.auth.token');
-        }
-
-        if (newSession?.user) {
-          if (newSession.user.id === ADMIN_UID) {
-            setIsAdmin(true);
-          }
-          await fetchProfile(newSession.user.id);
-        } else {
           setProfile(null);
           setIsAdmin(false);
         }
-
         setIsLoading(false);
       }
     );
@@ -165,27 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: { full_name?: string }) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: metadata },
-      });
-
-      if (error) throw error;
-
-      console.log('Sign up successful:', data);
-      return { success: true };
-    } catch (error: any) {
-      console.error('Sign up error:', error.message);
-      return {
-        success: false,
-        error: error.message || 'Signup failed',
-      };
-    }
-  };
-
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -209,7 +189,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAdmin,
         signIn,
-        signUp,
         signOut,
         refreshProfile,
       }}
@@ -225,43 +204,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-export const createAdminUser = async () => {
-  const adminEmail = 'adminpage@gmail.com';
-  const adminPassword = 'admin@12345';
-
-  const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
-    email: adminEmail,
-    password: adminPassword,
-  });
-
-  if (!signInError && user) {
-    console.log('Admin user already exists');
-    return;
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    email: adminEmail,
-    password: adminPassword,
-    options: { data: { full_name: 'Admin User' } },
-  });
-
-  if (error) {
-    console.error('Error creating admin user:', error.message);
-    return;
-  }
-
-  if (data.user) {
-    const { error: roleError } = await supabase
-      .from('profiles')
-      .update({ role: 'admin' })
-      .eq('id', data.user.id);
-
-    if (roleError) {
-      console.error('Error setting admin role:', roleError.message);
-    } else {
-      console.log('Admin user created and role set');
-    }
-  }
 };
