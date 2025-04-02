@@ -39,8 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setProfile(data);
       setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
-      console.log('Profile fetched:', data, 'isAdmin:', data.role === 'admin' || userId === ADMIN_UID);
-      
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -57,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log('Initial session:', currentSession, 'Error:', error?.message);
 
         if (currentSession) {
           setSession(currentSession);
@@ -83,31 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('Auth state changed:', event, newSession);
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
-        if (newSession) {
-          try {
-            localStorage.setItem('supabase.auth.token', JSON.stringify({
-              access_token: newSession.access_token,
-              refresh_token: newSession.refresh_token,
-              expires_in: newSession.expires_in,
-              expires_at: newSession.expires_at,
-              token_type: newSession.token_type,
-            }));
-            console.log('Manually stored session in localStorage');
-          } catch (e) {
-            console.error('Failed to manually store session:', e);
+        if (newSession && newSession.user) {
+          if (newSession.user.id === ADMIN_UID) {
+            setIsAdmin(true);
           }
-          if (newSession.user) {
-            if (newSession.user.id === ADMIN_UID) {
-              setIsAdmin(true);
-            }
-            await fetchProfile(newSession.user.id);
-          }
+          await fetchProfile(newSession.user.id);
         } else {
-          localStorage.removeItem('supabase.auth.token');
           setProfile(null);
           setIsAdmin(false);
         }
@@ -123,7 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Attempting sign in with:', { email, password });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -131,26 +111,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      console.log('Sign in response:', data);
       setSession(data.session);
       setUser(data.user);
 
-      try {
-        localStorage.setItem('supabase.auth.token', JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-          expires_in: data.session.expires_in,
-          expires_at: data.session.expires_at,
-          token_type: data.session.token_type,
-        }));
-        console.log('Manually stored session after signIn');
-      } catch (e) {
-        console.error('Failed to manually store session after signIn:', e);
-      }
-
       if (data.user?.id === ADMIN_UID) {
-        toast.success('Welcome, Admin!');
         setIsAdmin(true);
+        toast.success('Welcome, Admin!');
       } else {
         toast.success('Login successful!');
       }
@@ -175,8 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       setIsAdmin(false);
-      localStorage.removeItem('supabase.auth.token');
-      console.log('Signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
     }

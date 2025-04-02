@@ -1,6 +1,5 @@
-
-import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
@@ -15,29 +14,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminDashboard from "./Dashboard";
 
-const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
-
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const { user, profile, signOut, isAdmin } = useAuth();
-
-  useEffect(() => {
-    // If user is not admin, redirect to login
-    if (user && user.id !== ADMIN_UID && !isAdmin) {
-      toast.error("You don't have permission to access the admin area");
-      navigate('/login');
-    } else if (!user) {
-      toast.error("Please login to access the admin dashboard");
-      navigate('/login');
-    }
-  }, [user, isAdmin, navigate]);
+  const { user, profile, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
       await signOut();
       toast.success("Logged out successfully");
-      navigate("/login");
     } catch (error) {
       toast.error("Error logging out");
     }
@@ -149,7 +133,7 @@ const AdminLayout = () => {
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           <Routes>
             <Route index element={<AdminDashboard />} />
-            <Route path="*" element={<AdminDashboard />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </main>
       </div>

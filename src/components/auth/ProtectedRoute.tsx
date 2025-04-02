@@ -1,5 +1,5 @@
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -13,7 +13,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin } = useAuth();
-  const location = useLocation();
 
   // Show loading indicator when actively checking auth status
   if (isLoading) {
@@ -24,17 +23,12 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Check if admin access is required and whether user has admin privileges
-  // Special case: User with specific UID is always granted admin access
   if (requireAdmin && !isAdmin && user.id !== ADMIN_UID) {
-    // Use toast to inform the user they don't have permission
-    // But only show it once by using setTimeout to avoid multiple toasts
-    setTimeout(() => {
-      toast.error("You don't have permission to access this page");
-    }, 0);
+    toast.error("You don't have permission to access this page");
     return <Navigate to="/" replace />;
   }
 
