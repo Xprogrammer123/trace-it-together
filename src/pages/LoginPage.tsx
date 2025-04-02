@@ -34,10 +34,12 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { signIn, user, isAdmin, profile } = useAuth();
 
-  // Navigate to admin dashboard if user is already logged in and is an admin
+  // Check if user is already authenticated and if they're an admin
   useEffect(() => {
-    if (user && (isAdmin || user.id === ADMIN_UID)) {
-      navigate('/admin');
+    if (user) {
+      if (isAdmin || user.id === ADMIN_UID) {
+        navigate('/admin');
+      }
     }
   }, [user, isAdmin, navigate]);
 
@@ -58,10 +60,9 @@ const LoginPage = () => {
       console.log('SignIn result:', { success, error });
 
       if (success) {
-        // If admin, redirect to admin dashboard
-        if (user?.id === ADMIN_UID || isAdmin) {
-          navigate('/admin');
-        }
+        // If user is admin, navigate to admin dashboard
+        // This is checked in the useEffect above once the user state updates
+        console.log("Login successful, waiting for user state to update");
       } else {
         console.error('Login failed with error:', error);
         toast.error(error || "Invalid email or password. Please try again.");
