@@ -1,6 +1,5 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Define the specific admin UID that should always be recognized as admin
@@ -23,14 +22,12 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   }
 
   if (!user) {
-    // Don't show error toast on initial load
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check if admin access is required and whether user has admin privileges
   // Special case: User with specific UID is always granted admin access
   if (requireAdmin && !isAdmin && user.id !== ADMIN_UID) {
-    toast.error("You don't have permission to access this page");
     return <Navigate to="/" replace />;
   }
 

@@ -32,7 +32,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { signIn, user } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,8 +51,8 @@ const LoginPage = () => {
       console.log('SignIn result:', { success, error });
 
       if (success) {
-        toast.success('Login successful! Redirecting to admin dashboard...');
-        navigate('/admin');
+        toast.success('Login successful');
+        // The navigation will happen in the AuthContext after profile is properly loaded
       } else {
         console.error('Login failed with error:', error);
         toast.error(error || "Invalid email or password. Please try again.");
@@ -65,14 +65,6 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
-
-  if (authLoading) return <div>Loading...</div>;
-
-  // If user is already logged in and is admin, redirect to admin dashboard
-  if (user && user.id === ADMIN_UID) {
-    navigate('/admin');
-    return null;
-  }
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
