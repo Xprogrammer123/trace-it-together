@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -121,6 +120,7 @@ export function Navbar() {
               <Link 
                 to="/login" 
                 className="block"
+                onClick={() => setMobileMenuOpen(false)} // Added to close menu on click
               >
                 <Button variant="default" className="w-full">
                   Admin Login
