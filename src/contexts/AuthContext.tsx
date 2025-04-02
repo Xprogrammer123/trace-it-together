@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Changed from true to false
   const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchProfile = async (userId: string) => {
@@ -52,24 +52,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initializeAuth = async () => {
-      setIsLoading(true);
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      console.log('Initial session:', currentSession, 'Error:', error?.message);
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log('Initial session:', currentSession, 'Error:', error?.message);
 
-      if (currentSession) {
-        setSession(currentSession);
-        setUser(currentSession.user);
-        if (currentSession.user.id === ADMIN_UID) {
-          setIsAdmin(true);
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          if (currentSession.user.id === ADMIN_UID) {
+            setIsAdmin(true);
+          }
+          await fetchProfile(currentSession.user.id);
+        } else {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setIsAdmin(false);
         }
-        await fetchProfile(currentSession.user.id);
-      } else {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setIsAdmin(false);
+      } catch (error) {
+        console.error('Authentication initialization error:', error);
+      } finally {
+        // Make sure isLoading is set to false when done
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -115,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       console.log('Attempting sign in with:', { email, password });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -154,6 +160,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: false,
         error: error.message || 'Login failed',
       };
+    } finally {
+      setIsLoading(false);
     }
   };
 

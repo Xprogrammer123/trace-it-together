@@ -15,6 +15,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   const { user, isLoading, isAdmin } = useAuth();
   const location = useLocation();
 
+  // Only show loading when actively checking auth status
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -22,7 +23,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
   }
 
   if (!user) {
-    toast.error("You must be logged in to access this page");
+    // Don't show error toast on initial load
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
