@@ -3,8 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
+// Define the specific admin UID that should always be recognized as admin
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
 type AuthContextType = {
@@ -24,9 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Set to true initially
   const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -42,11 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAdmin(data.role === 'admin' || userId === ADMIN_UID);
       console.log('Profile fetched:', data, 'isAdmin:', data.role === 'admin' || userId === ADMIN_UID);
       
-      // Navigate to admin dashboard if admin
-      if (data.role === 'admin' || userId === ADMIN_UID) {
-        navigate('/admin');
-      }
-      
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -60,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initializeAuth = async () => {
+      setIsLoading(true);
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         console.log('Initial session:', currentSession, 'Error:', error?.message);
@@ -69,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(currentSession.user);
           if (currentSession.user.id === ADMIN_UID) {
             setIsAdmin(true);
-            navigate('/admin');
           }
           await fetchProfile(currentSession.user.id);
         } else {
@@ -109,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (newSession.user) {
             if (newSession.user.id === ADMIN_UID) {
               setIsAdmin(true);
-              navigate('/admin');
             }
             await fetchProfile(newSession.user.id);
           }
@@ -125,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -158,12 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user?.id === ADMIN_UID) {
         toast.success('Welcome, Admin!');
         setIsAdmin(true);
-        await fetchProfile(data.user.id); // Wait for profile to be fetched before navigation
       } else {
         toast.success('Login successful!');
-        await fetchProfile(data.user.id); // Wait for profile to be fetched
       }
-
+      
+      await fetchProfile(data.user.id);
       return { success: true };
     } catch (error: any) {
       console.error('Sign in error:', error.message);

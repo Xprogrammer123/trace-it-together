@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -32,7 +32,14 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin, profile } = useAuth();
+
+  // Navigate to admin dashboard if user is already logged in and is an admin
+  useEffect(() => {
+    if (user && (isAdmin || user.id === ADMIN_UID)) {
+      navigate('/admin');
+    }
+  }, [user, isAdmin, navigate]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,8 +58,10 @@ const LoginPage = () => {
       console.log('SignIn result:', { success, error });
 
       if (success) {
-        toast.success('Login successful');
-        // The navigation will happen in the AuthContext after profile is properly loaded
+        // If admin, redirect to admin dashboard
+        if (user?.id === ADMIN_UID || isAdmin) {
+          navigate('/admin');
+        }
       } else {
         console.error('Login failed with error:', error);
         toast.error(error || "Invalid email or password. Please try again.");
