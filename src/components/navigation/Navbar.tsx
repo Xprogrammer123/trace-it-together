@@ -121,7 +121,6 @@ export function Navbar() {
               <Link 
                 to="/login" 
                 className="block"
-                onClick={() => setMobileMenuOpen(false)}
               >
                 <Button variant="default" className="w-full">
                   Admin Login
