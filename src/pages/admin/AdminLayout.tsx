@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -19,12 +20,8 @@ const AdminLayout = () => {
   const { user, profile, signOut } = useAuth();
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("Logged out successfully");
-    } catch (error) {
-      toast.error("Error logging out");
-    }
+    await signOut();
+    toast.success("Logged out successfully");
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -129,12 +126,9 @@ const AdminLayout = () => {
           <h1 className="ml-4 lg:ml-0 text-lg font-medium">Admin Dashboard</h1>
         </header>
 
-        {/* Content */}
+        {/* Content - simplified routing */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
-          <Routes>
-            <Route index element={<AdminDashboard />} />
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Routes>
+          <AdminDashboard />
         </main>
       </div>
     </div>
