@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/supabase"; // Import Supabase client
 
 const ADMIN_UID = 'd14ac157-3e21-4b6e-89ea-ba40f842d6d4';
 
@@ -32,16 +31,6 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, profile } = useAuth();
-
-  // Check if user is already authenticated and if they're an admin
-  useEffect(() => {
-    if (user) {
-      if (isAdmin || user.id === ADMIN_UID) {
-        navigate('/admin');
-      }
-    }
-  }, [user, isAdmin, navigate]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,17 +45,27 @@ const LoginPage = () => {
     console.log('Starting login process with:', values);
 
     try {
-      const { success, error } = await signIn(values.email, values.password);
-      console.log('SignIn result:', { success, error });
+      // Sign in with Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
-      if (success) {
-        // If user is admin, navigate to admin dashboard
-        // This is checked in the useEffect above once the user state updates
-        console.log("Login successful, waiting for user state to update");
-      } else {
-        console.error('Login failed with error:', error);
-        toast.error(error || "Invalid email or password. Please try again.");
+      if (error) {
+        console.error('Login failed with error:', error.message);
+        toast.error(error.message || "Invalid email or password. Please try again.");
         form.setError("password", { message: "Invalid email or password" });
+        return;
+      }
+
+      if (data.user) {
+        console.log('Login successful, user:', data.user);
+        // Check if the user is the admin with the specific ID
+        if (data.user.id === ADMIN_UID) {
+          navigate('/admin');
+        } else {
+          toast.error("You do not have admin access.");
+        }
       }
     } catch (error) {
       console.error('Unexpected error during login:', error);
