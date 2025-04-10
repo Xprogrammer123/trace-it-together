@@ -19,10 +19,10 @@ export function FooterSection() {
       <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-6">
+            <Link to="/" className="flex items-center gap-2 mb-6">
               <Package className="h-8 w-8 text-primary" />
               <span className="text-xl font-display font-semibold">TraceIt</span>
-            </div>
+            </Link>
             
             <p className="text-gray-600 mb-8 max-w-md">
               TraceIt provides seamless package tracking solutions for businesses and individuals. Track your deliveries with confidence and precision.

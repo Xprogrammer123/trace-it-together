@@ -27,11 +27,8 @@ export function TrackingForm({ minimal = false }: { minimal?: boolean }) {
     
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate(`/track/${trackingId}`);
-    }, 800);
+    // Navigate directly to tracking page
+    navigate(`/track/${trackingId}`);
   };
 
   return (

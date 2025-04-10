@@ -1,5 +1,6 @@
+
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,6 +10,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const isMobile = useIsMobile();
+  const location = useLocation();
   
   React.useEffect(() => {
     const handleScroll = () => {
@@ -120,7 +122,7 @@ export function Navbar() {
               <Link 
                 to="/login" 
                 className="block"
-                onClick={() => setMobileMenuOpen(false)} // Added to close menu on click
+                onClick={() => setMobileMenuOpen(false)}
               >
                 <Button variant="default" className="w-full">
                   Admin Login

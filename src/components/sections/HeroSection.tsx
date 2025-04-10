@@ -44,11 +44,11 @@ export function HeroSection() {
                     <ArrowRight className={`ml-1 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
                   </Button>
                 </Link>
-                <Link to="/#how-it-works">
+                <a href="#how-it-works">
                   <Button variant="outline" size="lg">
                     How It Works
                   </Button>
-                </Link>
+                </a>
               </div>
             </div>
           </AnimatedSection>

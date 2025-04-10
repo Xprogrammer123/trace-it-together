@@ -10,6 +10,7 @@ import LoginPage from "./pages/LoginPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import TrackingPage from "./pages/TrackingPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -40,6 +41,8 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/track" element={<TrackingPage />} />
+                <Route path="/track/:trackingId" element={<TrackingPage />} />
                 <Route 
                   path="/admin/*" 
                   element={
