@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Package, Search, Edit, Trash2, Loader2, PlusCircle } from "lucide-react";
@@ -139,9 +140,9 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Tracking Management</h2>
-        <Link to="/admin/add">
+        <Link to="/admin/tracking/add">
           <Button className="flex items-center gap-2">
-            <PlusCircle size={16} />
+            <PlusCircle className="h-4 w-4" />
             <span>Add New Tracking</span>
           </Button>
         </Link>

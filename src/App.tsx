@@ -1,4 +1,3 @@
-
 import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,18 +10,17 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import TrackingPage from "./pages/TrackingPage";
+import TrackingAdd from "./pages/admin/TrackingAdd";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false, // Prevents unnecessary refetches
-      retry: 1, // Limit retries for failed queries
+      refetchOnWindowFocus: false,
+      retry: 1,
     },
   },
 });
 
-// Loading fallback
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -48,6 +46,14 @@ const App = () => {
                   element={
                     <ProtectedRoute requireAdmin={true}>
                       <AdminLayout />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/tracking/add" 
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <TrackingAdd />
                     </ProtectedRoute>
                   } 
                 />
