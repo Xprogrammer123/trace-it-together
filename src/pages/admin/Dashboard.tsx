@@ -77,6 +77,7 @@ const AdminDashboard = () => {
     trackingCode: ""
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTracking, setSelectedTracking] = useState<TrackingInfo | null>(null);
 
   const { data: trackingData, isLoading, error } = useQuery({
     queryKey: ['tracking'],
@@ -124,6 +125,10 @@ const AdminDashboard = () => {
     setSearchTerm(e.target.value);
   };
 
+  const handleViewDetails = (item: TrackingInfo) => {
+    setSelectedTracking(item);
+  };
+
   if (error) {
     return (
       <div className="p-8 text-center">
@@ -165,74 +170,156 @@ const AdminDashboard = () => {
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
           ) : filteredData?.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tracking Code</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Destination</TableHead>
-                    <TableHead className="hidden lg:table-cell">Receiver</TableHead>
-                    <TableHead className="hidden md:table-cell">Last Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Package size={16} className="text-gray-500" />
-                          {item.tracking_code}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          item.status === "Delivered"
-                            ? "bg-green-100 text-green-700"
-                            : item.status === "In Transit"
-                            ? "bg-blue-100 text-blue-700" 
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}>
-                          {item.status}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{item.destination}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{item.receiver_name}</TableCell>
-                      <TableCell className="hidden md:table-cell">{item.current_location}</TableCell>
-                      <TableCell className="hidden md:table-cell">{item.comment || '-'}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {formatDate(item.last_updated)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link to={`/admin/tracking/edit/${item.tracking_code}`}>
-                            <Button variant="outline" size="icon">
-                              <Edit size={16} />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="text-red-500 hover:text-red-600"
-                            onClick={() => 
-                              setDeleteConfirm({
-                                open: true,
-                                id: item.id.toString(),
-                                trackingCode: item.tracking_code
-                              })
-                            }
-                          >
-                            <Trash2 size={16} />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
-                      </TableCell>
+            <div className="space-y-6">
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tracking Code</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Destination</TableHead>
+                      <TableHead>Last Updated</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          <button 
+                            onClick={() => handleViewDetails(item)}
+                            className="flex items-center gap-2 hover:text-primary hover:underline"
+                          >
+                            <Package size={16} className="text-gray-500" />
+                            {item.tracking_code}
+                          </button>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            item.status === "Delivered"
+                              ? "bg-green-100 text-green-700"
+                              : item.status === "In Transit"
+                              ? "bg-blue-100 text-blue-700" 
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {item.status}
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.destination}</TableCell>
+                        <TableCell>{formatDate(item.last_updated)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link to={`/admin/tracking/edit/${item.tracking_code}`}>
+                              <Button variant="outline" size="icon">
+                                <Edit size={16} />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="text-red-500 hover:text-red-600"
+                              onClick={() => 
+                                setDeleteConfirm({
+                                  open: true,
+                                  id: item.id.toString(),
+                                  trackingCode: item.tracking_code
+                                })
+                              }
+                            >
+                              <Trash2 size={16} />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Details Card */}
+              {selectedTracking && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package size={18} />
+                      {selectedTracking.tracking_code} - Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="overflow-y-auto max-h-96">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-medium text-gray-500 mb-2">Tracking Information</h3>
+                          <div className="space-y-2 pl-4">
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Status:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.status}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Current Location:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.current_location}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Destination:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.destination}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Comment:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.comment || '-'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-medium text-gray-500 mb-2">Timestamps</h3>
+                          <div className="space-y-2 pl-4">
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Created:</span>
+                              <span className="col-span-2 font-medium">{formatDate(selectedTracking.created_at)}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Last Updated:</span>
+                              <span className="col-span-2 font-medium">{formatDate(selectedTracking.last_updated)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-medium text-gray-500 mb-2">Shipper Information</h3>
+                          <div className="space-y-2 pl-4">
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Name:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.shipper_name}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Address:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.shipper_address}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-medium text-gray-500 mb-2">Receiver Information</h3>
+                          <div className="space-y-2 pl-4">
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Name:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.receiver_name}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <span className="text-gray-500">Address:</span>
+                              <span className="col-span-2 font-medium">{selectedTracking.receiver_address}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             <div className="text-center py-10 text-gray-500">
