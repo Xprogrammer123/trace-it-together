@@ -164,7 +164,7 @@ const AdminDashboard = () => {
             />
           </div>
         </CardHeader>
-        <CardContent>
+     
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
@@ -326,7 +326,7 @@ const AdminDashboard = () => {
               {searchTerm ? "No matching tracking records found" : "No tracking records available"}
             </div>
           )}
-        </CardContent>
+     
       </Card>
 
       <Dialog
