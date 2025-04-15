@@ -150,7 +150,7 @@ const AdminDashboard = () => {
         </Link>
       </div>
 
-      <Card>
+      <Card className="w-[100%] overflow-x-auto">
         <CardHeader>
           <CardTitle>All Tracking Entries</CardTitle>
           <div className="relative max-w-sm mt-2">
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
             </div>
           ) : filteredData?.length > 0 ? (
             <div className="space-y-6">
-              <div className="rounded-md border overflow-x-auto">
+              <div className="rounded-md border ">
                 <Table>
                   <TableHeader>
                     <TableRow>
