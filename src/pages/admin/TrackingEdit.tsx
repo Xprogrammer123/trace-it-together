@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AdminLayout } from "@/layouts/admin";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +30,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData, TrackingInfo } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
 
-// Form schema validation (same as in TrackingAdd.tsx)
 const trackingSchema = z.object({
   tracking_code: z.string().min(6, "Tracking code must be at least 6 characters"),
   status: z.string().min(1, "Status is required"),
@@ -43,7 +42,6 @@ const trackingSchema = z.object({
   receiver_address: z.string().min(1, "Receiver address is required"),
 });
 
-// Fetch tracking record from Supabase
 const fetchTrackingRecord = async (trackingCode: string): Promise<TrackingInfo> => {
   const { data, error } = await supabase
     .from('tracking')
@@ -58,7 +56,6 @@ const fetchTrackingRecord = async (trackingCode: string): Promise<TrackingInfo> 
   return data as TrackingInfo;
 };
 
-// Update tracking record in Supabase
 const updateTrackingRecord = async (trackingCode: string, data: TrackingFormData): Promise<void> => {
   const { error } = await supabase
     .from('tracking')
@@ -138,226 +135,218 @@ const AdminTrackingEdit = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Edit Tracking Record</h2>
-        <p className="text-gray-500 mt-1">
-          Update the tracking information for {trackingId}.
-        </p>
-      </div>
+    <AdminLayout>
+      <div className="p-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Edit Tracking Record</h2>
+          <p className="text-gray-500 mt-1">
+            Update tracking information for {trackingId}.
+          </p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tracking Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tracking Code (readonly) */}
-                <FormField
-                  control={form.control}
-                  name="tracking_code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tracking Code</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="TRK-123456"
-                          {...field}
-                          readOnly
-                          className="bg-gray-50"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+        ) : (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Tracking Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="tracking_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tracking Code</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="TRK-123456"
+                              {...field}
+                              readOnly
+                              className="bg-gray-50"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                {/* Status */}
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Pending">Pending</SelectItem>
+                              <SelectItem value="Processing">Processing</SelectItem>
+                              <SelectItem value="In Transit">In Transit</SelectItem>
+                              <SelectItem value="Out for Delivery">Out for Delivery</SelectItem>
+                              <SelectItem value="Delivered">Delivered</SelectItem>
+                              <SelectItem value="Failed Delivery">Failed Delivery</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="current_location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Chicago, IL" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="destination"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Destination</FormLabel>
+                          <FormControl>
+                            <Input placeholder="New York, NY" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="comment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comment (Optional)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
+                          <Textarea 
+                            placeholder="Additional information about the package..."
+                            {...field}
+                            value={field.value || ""}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Processing">Processing</SelectItem>
-                          <SelectItem value="In Transit">In Transit</SelectItem>
-                          <SelectItem value="Out for Delivery">Out for Delivery</SelectItem>
-                          <SelectItem value="Delivered">Delivered</SelectItem>
-                          <SelectItem value="Failed Delivery">Failed Delivery</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Current Location */}
-                <FormField
-                  control={form.control}
-                  name="current_location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Chicago, IL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Destination */}
-                <FormField
-                  control={form.control}
-                  name="destination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Destination</FormLabel>
-                      <FormControl>
-                        <Input placeholder="New York, NY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Comment */}
-              <FormField
-                control={form.control}
-                name="comment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Comment (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Additional information about the package..."
-                        {...field}
-                        value={field.value || ""}
+                  <div className="space-y-4">
+                    <h3 className="text-md font-semibold">Shipper Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="shipper_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Shipper Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John Smith" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              {/* Shipper Information */}
-              <div className="space-y-4">
-                <h3 className="text-md font-semibold">Shipper Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="shipper_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shipper Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Smith" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="shipper_address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Shipper Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="123 Main St, Chicago, IL" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="shipper_address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shipper Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 Main St, Chicago, IL" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                  <div className="space-y-4">
+                    <h3 className="text-md font-semibold">Receiver Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="receiver_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Receiver Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Jane Doe" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              {/* Receiver Information */}
-              <div className="space-y-4">
-                <h3 className="text-md font-semibold">Receiver Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="receiver_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Receiver Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Jane Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="receiver_address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Receiver Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="456 Oak St, New York, NY" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="receiver_address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Receiver Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="456 Oak St, New York, NY" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate("/admin")}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Tracking Record"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+                  <div className="flex justify-end space-x-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => navigate("/admin")}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        "Update Tracking Record"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </AdminLayout>
   );
 };
 
