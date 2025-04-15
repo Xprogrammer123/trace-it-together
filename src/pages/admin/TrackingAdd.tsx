@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +29,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
 
-// Form schema validation
 const trackingSchema = z.object({
   tracking_code: z.string().min(6, "Tracking code must be at least 6 characters"),
   status: z.string().min(1, "Status is required"),
@@ -43,7 +41,6 @@ const trackingSchema = z.object({
   receiver_address: z.string().min(1, "Receiver address is required"),
 });
 
-// Add tracking record to Supabase
 const addTrackingRecord = async (data: TrackingFormData) => {
   const { data: result, error } = await supabase
     .from('tracking')
@@ -83,7 +80,7 @@ const AdminTrackingAdd = () => {
       await addTrackingRecord(values);
       queryClient.invalidateQueries({ queryKey: ['tracking'] });
       toast.success("Tracking record created successfully");
-      navigate("/admin"); // Return to dashboard after successful creation
+      navigate("/admin");
     } catch (error: any) {
       toast.error(error.message || "Failed to create tracking record");
     } finally {
@@ -92,7 +89,7 @@ const AdminTrackingAdd = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Add New Tracking Record</h2>
         <p className="text-gray-500 mt-1">
@@ -108,7 +105,6 @@ const AdminTrackingAdd = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tracking Code */}
                 <FormField
                   control={form.control}
                   name="tracking_code"
@@ -123,7 +119,6 @@ const AdminTrackingAdd = () => {
                   )}
                 />
 
-                {/* Status */}
                 <FormField
                   control={form.control}
                   name="status"
@@ -153,7 +148,6 @@ const AdminTrackingAdd = () => {
                   )}
                 />
 
-                {/* Current Location */}
                 <FormField
                   control={form.control}
                   name="current_location"
@@ -168,7 +162,6 @@ const AdminTrackingAdd = () => {
                   )}
                 />
 
-                {/* Destination */}
                 <FormField
                   control={form.control}
                   name="destination"
@@ -184,7 +177,6 @@ const AdminTrackingAdd = () => {
                 />
               </div>
 
-              {/* Comment */}
               <FormField
                 control={form.control}
                 name="comment"
@@ -202,7 +194,6 @@ const AdminTrackingAdd = () => {
                 )}
               />
 
-              {/* Shipper Information */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold">Shipper Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -236,7 +227,6 @@ const AdminTrackingAdd = () => {
                 </div>
               </div>
 
-              {/* Receiver Information */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold">Receiver Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -270,7 +260,6 @@ const AdminTrackingAdd = () => {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="flex justify-end space-x-4">
                 <Button 
                   type="button" 

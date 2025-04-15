@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
@@ -18,6 +17,7 @@ import AdminDashboard from "./Dashboard";
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await signOut();
@@ -31,6 +31,11 @@ const AdminLayout = () => {
       title: "Dashboard",
       icon: <LayoutDashboard size={18} />,
       path: "/admin"
+    },
+    {
+      title: "Add Tracking",
+      icon: <Package size={18} />,
+      path: "/admin/tracking/add"
     }
   ];
 
@@ -45,11 +50,9 @@ const AdminLayout = () => {
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+      <aside className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
         <div className="h-full flex flex-col">
           {/* Sidebar header */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
@@ -71,17 +74,19 @@ const AdminLayout = () => {
           <ScrollArea className="flex-1">
             <nav className="p-4 space-y-1">
               {navItems.map((item, index) => (
-                <div
+                <Link
                   key={index}
-                  className="flex items-center gap-3 px-4 py-3 rounded-md transition-colors bg-primary/10 text-primary font-medium"
+                  to={item.path}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                    location.pathname === item.path
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
                 >
                   {item.icon}
                   <span>{item.title}</span>
-                  <ChevronRight
-                    size={16}
-                    className="ml-auto text-gray-400"
-                  />
-                </div>
+                  <ChevronRight size={16} className="ml-auto text-gray-400" />
+                </Link>
               ))}
             </nav>
           </ScrollArea>

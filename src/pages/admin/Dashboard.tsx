@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Package, Search, Edit, Trash2, Loader2, PlusCircle } from "lucide-react";
@@ -27,7 +26,6 @@ import { formatDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Fetch tracking data from Supabase
 const fetchTrackingData = async (): Promise<TrackingInfo[]> => {
   const { data, error } = await supabase
     .from('tracking')
@@ -54,7 +52,6 @@ const fetchTrackingData = async (): Promise<TrackingInfo[]> => {
   return data as TrackingInfo[];
 };
 
-// Delete tracking record in Supabase
 const deleteTracking = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('tracking')
@@ -202,12 +199,14 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{item.destination}</TableCell>
                       <TableCell className="hidden lg:table-cell">{item.receiver_name}</TableCell>
+                      <TableCell className="hidden md:table-cell">{item.current_location}</TableCell>
+                      <TableCell className="hidden md:table-cell">{item.comment || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         {formatDate(item.last_updated)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Link to={`/admin/edit/${item.tracking_code}`}>
+                          <Link to={`/admin/tracking/edit/${item.tracking_code}`}>
                             <Button variant="outline" size="icon">
                               <Edit size={16} />
                               <span className="sr-only">Edit</span>
@@ -243,7 +242,6 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteConfirm.open}
         onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}

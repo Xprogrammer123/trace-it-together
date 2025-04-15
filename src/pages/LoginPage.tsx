@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +33,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { signIn, user, isAdmin } = useAuth();
 
-  // Redirect if already logged in
   if (user && isAdmin) {
     navigate('/admin');
     return null;
@@ -82,7 +80,14 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <div className="flex justify-center items-center gap-2">
+            <Link to="/" className="absolute top-4 left-4">
+              <Button variant="ghost" size="sm">
+                ← Back to Home
+              </Button>
+            </Link>
+            <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          </div>
           <CardDescription>
             Enter your credentials to access the admin dashboard
           </CardDescription>

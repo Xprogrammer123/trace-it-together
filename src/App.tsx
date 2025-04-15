@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import TrackingPage from "./pages/TrackingPage";
 import TrackingAdd from "./pages/admin/TrackingAdd";
+import TrackingEdit from "./pages/admin/TrackingEdit";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,14 @@ const App = () => {
                   element={
                     <ProtectedRoute requireAdmin={true}>
                       <TrackingAdd />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/tracking/edit/:trackingId" 
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <TrackingEdit />
                     </ProtectedRoute>
                   } 
                 />
