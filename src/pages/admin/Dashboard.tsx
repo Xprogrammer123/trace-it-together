@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Package, Search, Edit, Trash2, Loader2, PlusCircle, ChevronRight } from "lucide-react";
+import { Package, Search, Edit, Trash2, Loader2, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,12 +161,10 @@ const AdminDashboard = () => {
               {filteredData.map((item) => (
                 <Card key={item.id} className="overflow-hidden shadow-sm">
                   <CardHeader className="sticky top-0 z-10 bg-background border-b p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Package size={18} className="text-primary" />
-                        <CardTitle className="text-base sm:text-lg">
-                          {item.tracking_code}
-                        </CardTitle>
+                        <CardTitle className="text-lg">{item.tracking_code}</CardTitle>
                       </div>
                       <div className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                         item.status === "Delivered"
@@ -180,122 +178,74 @@ const AdminDashboard = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="overflow-x-auto p-0">
-                    <div className="min-w-[600px] md:min-w-0">
-                      <div className="grid grid-cols-3 md:grid-cols-5 gap-4 p-4">
-                        {/* Column 1 */}
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-gray-500">Current Location</p>
-                            <p className="font-medium truncate" title={item.current_location}>
-                              {item.current_location}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Shipper</p>
-                            <p className="font-medium truncate" title={item.shipper_name}>
-                              {item.shipper_name}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Column 2 */}
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-gray-500">Destination</p>
-                            <p className="font-medium truncate" title={item.destination}>
-                              {item.destination}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Shipper Address</p>
-                            <p className="font-medium truncate" title={item.shipper_address}>
-                              {item.shipper_address}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Column 3 */}
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-gray-500">Receiver</p>
-                            <p className="font-medium truncate" title={item.receiver_name}>
-                              {item.receiver_name}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Created</p>
-                            <p className="font-medium">{formatDate(item.created_at)}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Column 4 (hidden on mobile) */}
-                        <div className="space-y-3 hidden md:block">
-                          <div>
-                            <p className="text-sm text-gray-500">Receiver Address</p>
-                            <p className="font-medium truncate" title={item.receiver_address}>
-                              {item.receiver_address}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Last Updated</p>
-                            <p className="font-medium">{formatDate(item.last_updated)}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Column 5 (hidden on mobile) */}
-                        <div className="space-y-3 hidden md:block">
-                          <div>
-                            <p className="text-sm text-gray-500">Comment</p>
-                            <p className="font-medium truncate" title={item.comment || '-'}>
-                              {item.comment || '-'}
-                            </p>
-                          </div>
-                          <div className="flex gap-2 justify-end md:justify-start">
-                            <Link to={`/admin/tracking/edit/${item.tracking_code}`}>
-                              <Button variant="outline" size="sm">
-                                <Edit size={14} className="mr-2" />
-                                Edit
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 hover:text-red-600"
-                              onClick={() => setDeleteConfirm({
-                                open: true,
-                                id: item.id.toString(),
-                                trackingCode: item.tracking_code
-                              })}
-                            >
-                              <Trash2 size={14} className="mr-2" />
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Mobile actions (visible only on mobile) */}
-                        <div className="col-span-3 flex gap-2 md:hidden">
-                          <Link to={`/admin/tracking/edit/${item.tracking_code}`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full">
-                              <Edit size={14} className="mr-2" />
-                              Edit
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-500 hover:text-red-600 flex-1"
-                            onClick={() => setDeleteConfirm({
-                              open: true,
-                              id: item.id.toString(),
-                              trackingCode: item.tracking_code
-                            })}
-                          >
-                            <Trash2 size={14} className="mr-2" />
-                            Delete
+                  <CardContent className="overflow-x-auto p-4">
+                    <div className="flex gap-6 min-w-max">
+                      {/* Tracking Info Row */}
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Current Location</p>
+                        <p className="font-medium">{item.current_location}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Destination</p>
+                        <p className="font-medium">{item.destination}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Shipper</p>
+                        <p className="font-medium">{item.shipper_name}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Shipper Address</p>
+                        <p className="font-medium">{item.shipper_address}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Receiver</p>
+                        <p className="font-medium">{item.receiver_name}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Receiver Address</p>
+                        <p className="font-medium">{item.receiver_address}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Comment</p>
+                        <p className="font-medium">{item.comment || '-'}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Created</p>
+                        <p className="font-medium">{formatDate(item.created_at)}</p>
+                      </div>
+                      
+                      <div className="flex flex-col min-w-[150px]">
+                        <p className="text-sm text-gray-500">Last Updated</p>
+                        <p className="font-medium">{formatDate(item.last_updated)}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 min-w-[150px]">
+                        <Link to={`/admin/tracking/edit/${item.tracking_code}`}>
+                          <Button variant="outline" size="sm">
+                            <Edit size={14} className="mr-2" />
+                            Edit
                           </Button>
-                        </div>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => setDeleteConfirm({
+                            open: true,
+                            id: item.id.toString(),
+                            trackingCode: item.tracking_code
+                          })}
+                        >
+                          <Trash2 size={14} className="mr-2" />
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
