@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +28,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
-import AdminLayout from "./AdminLayout";
 
 const trackingSchema = z.object({
   tracking_code: z.string().min(6, "Tracking code must be at least 6 characters"),
@@ -90,7 +88,7 @@ const AdminTrackingAdd = () => {
     }
   };
 
-  const content = (
+  return (
     <div className="p-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Add New Tracking Record</h2>
@@ -99,7 +97,7 @@ const AdminTrackingAdd = () => {
         </p>
       </div>
 
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
           <CardTitle>Tracking Information</CardTitle>
         </CardHeader>
@@ -288,8 +286,6 @@ const AdminTrackingAdd = () => {
       </Card>
     </div>
   );
-
-  return <AdminLayout>{content}</AdminLayout>;
 };
 
 export default AdminTrackingAdd;
