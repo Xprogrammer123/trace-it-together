@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Link, Outlet } from "react-router-dom";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
@@ -14,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import AdminDashboard from "./Dashboard";
+import TrackingAdd from "./tracking/Add";
+import TrackingEdit from "./tracking/Edit";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,6 +40,14 @@ const AdminLayout = () => {
       path: "/admin/tracking/add"
     }
   ];
+
+  // Get the current page title based on the route
+  const getPageTitle = () => {
+    if (location.pathname === "/admin") return "Dashboard";
+    if (location.pathname === "/admin/tracking/add") return "Add Tracking";
+    if (location.pathname.startsWith("/admin/tracking/edit")) return "Edit Tracking";
+    return "Admin";
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -129,12 +138,19 @@ const AdminLayout = () => {
           >
             <Menu size={20} />
           </Button>
-          <h1 className="ml-4 lg:ml-0 text-lg font-medium">Admin Dashboard</h1>
+          <h1 className="ml-4 lg:ml-0 text-lg font-medium">{getPageTitle()}</h1>
         </header>
 
-        {/* Content - simplified routing */}
+        {/* Content area with nested routes */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
-          <AdminDashboard />
+          <Routes>
+            <Route index element={<AdminDashboard />} />
+            <Route path="tracking">
+              <Route path="add" element={<TrackingAdd />} />
+              <Route path="edit/:trackingCode" element={<TrackingEdit />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
         </main>
       </div>
     </div>
