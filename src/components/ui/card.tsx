@@ -1,5 +1,5 @@
-import * as React from "react"
 
+import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
@@ -9,7 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "border shadow-sm bg-card text-card-foreground shadow-sm w-[100%] overflow-x-auto ",
+      "relative border shadow-sm bg-card text-card-foreground shadow-sm w-full overflow-x-auto",
       className
     )}
     {...props}
@@ -23,7 +23,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("sticky top-0 z-10 flex flex-col space-y-1.5 p-6 bg-card border-b", className)}
     {...props}
   />
 ))
@@ -60,7 +60,14 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-3 pt-0 ", className)} {...props} />
+  <div 
+    ref={ref} 
+    className={cn(
+      "p-3 pt-0 overflow-x-hidden min-w-[600px] md:min-w-0",
+      className
+    )} 
+    {...props} 
+  />
 ))
 CardContent.displayName = "CardContent"
 
