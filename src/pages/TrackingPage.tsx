@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -36,6 +37,11 @@ const fetchTrackingInfo = async (trackingId: string): Promise<TrackingInfo> => {
   if (historyError) {
     console.error("History fetch error:", historyError);
     // Continue with just tracking data
+  }
+
+  // If delivery_date is undefined, set a default value
+  if (!trackingData.delivery_date) {
+    trackingData.delivery_date = new Date().toISOString(); // Default to today
   }
 
   return {
