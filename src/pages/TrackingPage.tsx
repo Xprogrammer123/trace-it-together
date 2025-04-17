@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +13,6 @@ import { formatDate, getDeliveryMessage } from "@/lib/utils";
 import { TrackingInfo } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fetch tracking info from Supabase
 const fetchTrackingInfo = async (trackingId: string): Promise<TrackingInfo> => {
   // Fetch tracking record
   const { data: trackingData, error: trackingError } = await supabase
@@ -36,17 +34,12 @@ const fetchTrackingInfo = async (trackingId: string): Promise<TrackingInfo> => {
 
   if (historyError) {
     console.error("History fetch error:", historyError);
-    // Continue with just tracking data
-  }
-
-  // If delivery_date is undefined, set a default value
-  if (!trackingData.delivery_date) {
-    trackingData.delivery_date = new Date().toISOString(); // Default to today
   }
 
   return {
     ...trackingData,
-    history: historyData || []
+    history: historyData || [],
+    delivery_date: trackingData.delivery_date || new Date().toISOString()
   } as TrackingInfo;
 };
 

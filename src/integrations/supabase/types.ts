@@ -42,6 +42,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           current_location: string
+          delivery_date: string
           destination: string
           id: string
           last_updated: string | null
@@ -57,6 +58,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_location: string
+          delivery_date: string
           destination: string
           id?: string
           last_updated?: string | null
@@ -72,6 +74,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_location?: string
+          delivery_date?: string
           destination?: string
           id?: string
           last_updated?: string | null

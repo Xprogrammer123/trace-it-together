@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +37,6 @@ import { TrackingFormData, TrackingInfo } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-// Form schema validation (same as in TrackingAdd.tsx)
 const trackingSchema = z.object({
   tracking_code: z.string().min(6, "Tracking code must be at least 6 characters"),
   status: z.string().min(1, "Status is required"),
@@ -52,7 +50,6 @@ const trackingSchema = z.object({
   delivery_date: z.string().min(1, "Delivery date is required"),
 });
 
-// Fetch tracking record from Supabase
 const fetchTrackingRecord = async (trackingCode: string): Promise<TrackingInfo> => {
   const { data, error } = await supabase
     .from('tracking')
@@ -64,15 +61,12 @@ const fetchTrackingRecord = async (trackingCode: string): Promise<TrackingInfo> 
     throw error;
   }
   
-  // If delivery_date is undefined, set a default value
-  if (!data.delivery_date) {
-    data.delivery_date = new Date().toISOString(); // Default to today
-  }
-  
-  return data as TrackingInfo;
+  return {
+    ...data,
+    delivery_date: data.delivery_date || new Date().toISOString()
+  } as TrackingInfo;
 };
 
-// Update tracking record in Supabase
 const updateTrackingRecord = async (trackingCode: string, data: TrackingFormData): Promise<void> => {
   const { error } = await supabase
     .from('tracking')
@@ -179,7 +173,6 @@ const AdminTrackingEdit = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tracking Code (readonly) */}
                 <FormField
                   control={form.control}
                   name="tracking_code"
@@ -199,7 +192,6 @@ const AdminTrackingEdit = () => {
                   )}
                 />
 
-                {/* Status */}
                 <FormField
                   control={form.control}
                   name="status"
@@ -230,7 +222,6 @@ const AdminTrackingEdit = () => {
                   )}
                 />
 
-                {/* Current Location */}
                 <FormField
                   control={form.control}
                   name="current_location"
@@ -245,7 +236,6 @@ const AdminTrackingEdit = () => {
                   )}
                 />
 
-                {/* Destination */}
                 <FormField
                   control={form.control}
                   name="destination"
@@ -260,7 +250,6 @@ const AdminTrackingEdit = () => {
                   )}
                 />
 
-                {/* Delivery Date */}
                 <FormField
                   control={form.control}
                   name="delivery_date"
@@ -303,7 +292,6 @@ const AdminTrackingEdit = () => {
                 />
               </div>
 
-              {/* Comment */}
               <FormField
                 control={form.control}
                 name="comment"
@@ -322,7 +310,6 @@ const AdminTrackingEdit = () => {
                 )}
               />
 
-              {/* Shipper Information */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold">Shipper Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -356,7 +343,6 @@ const AdminTrackingEdit = () => {
                 </div>
               </div>
 
-              {/* Receiver Information */}
               <div className="space-y-4">
                 <h3 className="text-md font-semibold">Receiver Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -390,7 +376,6 @@ const AdminTrackingEdit = () => {
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="flex justify-end space-x-4">
                 <Button 
                   type="button" 
