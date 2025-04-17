@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,15 +52,19 @@ const trackingSchema = z.object({
 });
 
 const addTrackingRecord = async (data: TrackingFormData) => {
+  console.log("Adding tracking record with data:", data);
+  
   const { data: result, error } = await supabase
     .from('tracking')
     .insert([data])
     .select();
 
   if (error) {
+    console.error("Error adding tracking record:", error);
     throw error;
   }
   
+  console.log("Tracking record added successfully:", result);
   return result[0];
 };
 
@@ -85,6 +90,7 @@ const AdminTrackingAdd = () => {
   });
 
   const onSubmit = async (values: TrackingFormData) => {
+    console.log("Form submitted with values:", values);
     setIsSubmitting(true);
     try {
       await addTrackingRecord(values);
@@ -92,11 +98,15 @@ const AdminTrackingAdd = () => {
       toast.success("Tracking record created successfully");
       navigate("/admin");
     } catch (error: any) {
+      console.error("Error in onSubmit:", error);
       toast.error(error.message || "Failed to create tracking record");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // For debugging purposes
+  console.log("Form state:", form.formState);
 
   return (
     <div className="p-6">
@@ -154,6 +164,34 @@ const AdminTrackingAdd = () => {
                           <SelectItem value="Failed Delivery">Failed Delivery</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="current_location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Chicago, IL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="destination"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Destination</FormLabel>
+                      <FormControl>
+                        <Input placeholder="New York, NY" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
