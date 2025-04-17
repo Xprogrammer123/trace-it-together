@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrackingForm } from "@/components/TrackingForm";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getDeliveryMessage } from "@/lib/utils";
 import { TrackingInfo } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -163,7 +162,6 @@ const TrackingPage: React.FC = () => {
         
         {data && (
           <>
-            {/* Status Card */}
             <Card className="mb-8 overflow-hidden">
               <div className={`h-2 ${getStatusColor(data.status)} w-full`}></div>
               <CardHeader>
@@ -217,8 +215,8 @@ const TrackingPage: React.FC = () => {
                         <p className="text-sm font-medium text-gray-500">Estimated Delivery</p>
                         <p className="font-medium">
                           {data.status === "Delivered" 
-                            ? "Package delivered" 
-                            : "1-2 business days"}
+                            ? "Package delivered"
+                            : getDeliveryMessage(data.delivery_date)}
                         </p>
                       </div>
                     </div>

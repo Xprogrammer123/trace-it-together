@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,9 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrackingFormData } from "@/types/tracking";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const trackingSchema = z.object({
   tracking_code: z.string().min(6, "Tracking code must be at least 6 characters"),
@@ -39,6 +47,7 @@ const trackingSchema = z.object({
   shipper_address: z.string().min(1, "Shipper address is required"),
   receiver_name: z.string().min(1, "Receiver name is required"),
   receiver_address: z.string().min(1, "Receiver address is required"),
+  delivery_date: z.string().min(1, "Delivery date is required"),
 });
 
 const addTrackingRecord = async (data: TrackingFormData) => {
@@ -71,6 +80,7 @@ const AdminTrackingAdd = () => {
       shipper_address: "",
       receiver_name: "",
       receiver_address: "",
+      delivery_date: "",
     },
   });
 
@@ -104,6 +114,7 @@ const AdminTrackingAdd = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Basic tracking info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -147,30 +158,44 @@ const AdminTrackingAdd = () => {
                     </FormItem>
                   )}
                 />
-
+                
+                {/* Delivery Date */}
                 <FormField
                   control={form.control}
-                  name="current_location"
+                  name="delivery_date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Chicago, IL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="destination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Destination</FormLabel>
-                      <FormControl>
-                        <Input placeholder="New York, NY" {...field} />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Delivery Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a delivery date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date?.toISOString())}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

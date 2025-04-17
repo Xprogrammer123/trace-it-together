@@ -1,4 +1,3 @@
-
 export interface TrackingHistory {
   id: string;
   tracking_id: string;
@@ -22,6 +21,7 @@ export interface TrackingInfo {
   receiver_address: string;
   created_at: string;
   history?: TrackingHistory[];
+  delivery_date: string;
 }
 
 export interface TrackingFormData {
@@ -34,4 +34,5 @@ export interface TrackingFormData {
   shipper_address: string;
   receiver_name: string;
   receiver_address: string;
+  delivery_date: string;
 }
